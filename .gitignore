@@ -1,5 +1,7 @@
 /target
-
+/backend/target
+/frontend/target
+/pi/target
 
 # Added by cargo
 #
