@@ -5,7 +5,8 @@ pub struct Config {
 
 impl Config {
     pub fn load() -> Self {
-        // Load configuration from environment variables or a config file
+        // Load configuration from environment variables
+        // TODO: or config file
         let port = std::env::var("PORT")
             .unwrap_or_else(|_| "6379".to_string())
             .parse::<u16>()
