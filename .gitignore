@@ -2,6 +2,7 @@
 /backend/target
 /frontend/target
 /pi/target
+*.db
 
 # Added by cargo
 #
