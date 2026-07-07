@@ -5,4 +5,6 @@ edition = "2024"
 
 [dependencies]
 tokio = { version = "1.52.3", features = ["full"] }
-rusqlite = { version = "0.32", features = ["bundled"] } 
+rusqlite = { version = "0.32", features = ["bundled"] }
+axum = "0.8"
+serde = { version = "1", features = ["derive"] }
