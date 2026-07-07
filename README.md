@@ -63,28 +63,42 @@ A self-hosted smart doorbell system built on a Raspberry Pi, a home server, and 
 
 ### Data flows
 
-| Flow | Path | Notes |
-|------|------|-------|
-| Motion trigger | PIR → Camera Pipeline → Server | Pi polls PIR; on trigger, ramps camera to high resolution and begins encoding |
-| Video stream | Pi → Server Stream Ingestor | Continuous TCP stream; server buffers and stores on confirmed events |
-| False-positive filter | Server Motion Validator | Server-side secondary check before persisting a clip or pushing a notification |
-| Live feed | Client → Server → Pi | Client requests live view; server proxies the Pi's current stream on demand |
-| Event archive | Client → Server Video Store | Client retrieves stored clips from server for past events |
-| Push notification | Server → Client | Server pushes an alert to the client app on each confirmed motion event |
+| Flow                  | Path                           | Notes                                                                          |
+| --------------------- | ------------------------------ | ------------------------------------------------------------------------------ |
+| Motion trigger        | PIR → Camera Pipeline → Server | Pi polls PIR; on trigger, ramps camera to high resolution and begins encoding  |
+| Video stream          | Pi → Server Stream Ingestor    | Continuous TCP stream; server buffers and stores on confirmed events           |
+| False-positive filter | Server Motion Validator        | Server-side secondary check before persisting a clip or pushing a notification |
+| Live feed             | Client → Server → Pi           | Client requests live view; server proxies the Pi's current stream on demand    |
+| Event archive         | Client → Server Video Store    | Client retrieves stored clips from server for past events                      |
+| Push notification     | Server → Client                | Server pushes an alert to the client app on each confirmed motion event        |
 
 ---
 
 ## Components
 
-### Pi (`/pi` — planned)
+### Pi (`/pi`) — scaffolded, unimplemented
+
 - Language: Rust
-- Crates: `rust_gpiozero` (GPIO / PIR), `ctrlc` (graceful shutdown)
+- Crates: `rust_gpiozero` (GPIO / PIR), `ctrlc` (graceful shutdown), `rusqlite` (bundled)
 - Responsibilities: PIR polling, dynamic camera resolution switching, H.264 encoding, TCP stream to server
+- Status: `Cargo.toml` declares the intended dependencies but `main.rs` is still the default "Hello, world!" stub — none of the above is implemented yet
 
-### Backend (`/backend`)
+### Backend (`/backend`) — in progress
+
 - Language: Rust
-- Crates: `tokio` (async runtime)
-- Responsibilities: TCP listener (port 6379), stream ingestion, motion validation, video storage, event/live-feed/archive API, push notification dispatch
+- Crates: `tokio` (async runtime), `axum` (HTTP API), `rusqlite` (bundled, metadata storage), `serde` (JSON serialization)
+- Responsibilities: TCP listener for the Pi stream, stream ingestion, motion validation, video storage, event/live-feed/archive HTTP API, push notification dispatch
+- Status:
+  - `Config::load` reads `PI_PORT`, `API_PORT`, `DB_NAME`, `VIDEO_PATH` from env vars with defaults; no config file support yet
+  - `App::run_pi_ingestor` binds the Pi TCP listener and accepts connections, but the accepted socket is dropped immediately — no stream reading, decoding, or motion validation yet
+  - `App::run_http_server` serves the axum router with a single `GET /events` route; no live-feed proxy or archive endpoints yet
+  - `SqliteStore` (implements `MetadataStore`) is wired up but `insert_event`/`list_events` are stubs (no-op query / always returns an empty list)
+  - `DiskVideoStore` (implements `VideoStore`) has working `save_clip`/`load_clip`/`delete_clip` against the filesystem, but nothing calls it yet — it isn't wired to the ingestor
+  - `migration_runner.rs` exists but is empty — no schema or migrations defined
+  - `Event` type (`id`, `timestamp`, `event_type`, `description`) derives `Serialize` for JSON API responses
 
-### Client (planned)
+### Client (`/frontend`) — scaffolded, unimplemented
+
+- Stack: Tauri + React + Vite
 - Responsibilities: push notification handling, live feed playback, event archive browsing
+- Status: still the default Tauri/React/Vite starter template (the "Greet" demo) — no doorbell-specific UI, API integration, or push handling has been built yet
