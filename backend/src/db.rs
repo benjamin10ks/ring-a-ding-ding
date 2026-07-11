@@ -20,7 +20,7 @@ impl SqliteStore {
     }
 
     // Very basic just add name and sql to migrations arr
-    pub fn run_migrations(&self) -> rusqlite::Result<()> {
+    fn run_migrations(&self) -> rusqlite::Result<()> {
         self.connection.execute_batch(
             "CREATE TABLE IF NOT EXISTS _migrations (
             id INTEGER PRIMARY KEY,
