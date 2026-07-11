@@ -13,57 +13,59 @@ pub struct SqliteStore {
 
 impl SqliteStore {
     pub fn new(name: &str) -> rusqlite::Result<Self> {
-        Ok(SqliteStore {
-            connection: Connection::open(name)?,
-        })
+        let connection = Connection::open(name)?;
+        let store = Self { connection };
+        store.run_migrations()?;
+        Ok(store)
     }
-}
 
-// Very basic just add name and sql to migrations arr
-pub fn run_migrations(conn: &Connection) -> rusqlite::Result<()> {
-    conn.execute_batch(
-        "CREATE TABLE IF NOT EXISTS _migrations (
+    // Very basic just add name and sql to migrations arr
+    pub fn run_migrations(&self) -> rusqlite::Result<()> {
+        self.connection.execute_batch(
+            "CREATE TABLE IF NOT EXISTS _migrations (
             id INTEGER PRIMARY KEY,
             name TEXT NOT NULL UNIQUE,
             applied_at INTEGER NOT NULL
         )",
-    )?;
+        )?;
 
-    let migrations: &[(&str, &str)] = &[(
-        "0001_create_events",
-        "CREATE TABLE events (
+        let migrations: &[(&str, &str)] = &[(
+            "0001_create_events",
+            "CREATE TABLE events (
              id INTEGER PRIMARY KEY AUTOINCREMENT,
              camera_id TEXT NOT NULL,
              timestamp TEXT NOT NULL,
              clip_path TEXT NOT NULL,
              )",
-    )];
+        )];
 
-    for (name, sql) in migrations {
-        let already_applied: bool = conn.query_row(
-            "SELECT COUNT(*) FROM _migrations WHERE name = ?1",
-            params![name],
-            |row| row.get::<_, i64>(0),
-        )? > 0;
+        for (name, sql) in migrations {
+            let already_applied: bool = self.connection.query_row(
+                "SELECT COUNT(*) FROM _migrations WHERE name = ?1",
+                params![name],
+                |row| row.get::<_, i64>(0),
+            )? > 0;
 
-        if already_applied {
-            continue;
+            if already_applied {
+                continue;
+            }
+
+            self.connection
+                .execute_batch(&format!("BEGIN; {} COMMIT;", sql))?;
+            self.connection.execute(
+                "INSERT INTO _migrations (name, applied_at) VALUES (?1, strftime('%s', 'now'))",
+                params![
+                    name,
+                    SystemTime::now()
+                        .duration_since(SystemTime::UNIX_EPOCH)
+                        .unwrap()
+                        .as_secs() as i64
+                ],
+            )?;
         }
 
-        conn.execute_batch(&format!("BEGIN; {} COMMIT;", sql))?;
-        conn.execute(
-            "INSERT INTO _migrations (name, applied_at) VALUES (?1, strftime('%s', 'now'))",
-            params![
-                name,
-                SystemTime::now()
-                    .duration_since(SystemTime::UNIX_EPOCH)
-                    .unwrap()
-                    .as_secs() as i64
-            ],
-        )?;
+        Ok(())
     }
-
-    Ok(())
 }
 
 impl MetadataStore for SqliteStore {
