@@ -15,4 +15,13 @@ impl Event {
             description,
         }
     }
+    pub fn validate(&self) -> Result<(), String> {
+        if self.event_type.is_empty() {
+            return Err("Event type cannot be empty".to_string());
+        }
+        if self.description.is_empty() {
+            return Err("Description cannot be empty".to_string());
+        }
+        Ok(())
+    }
 }
