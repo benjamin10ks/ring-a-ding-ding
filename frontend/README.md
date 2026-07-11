@@ -1,7 +1,19 @@
-# Tauri + React + Typescript
+# Frontend design ideas
 
-This template should help get you started developing with Tauri, React and Typescript in Vite.
+Retro terminal esc:
 
-## Recommended IDE Setup
+- old-school terminal interface with green text on a black background
+- simple command-line interface for navigation
+- minimalistic design with ASCII art and text-based graphics
 
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+Modern web app slop:
+
+- sleek and clean design with a focus on usability
+- responsive layout for different screen sizes
+- interactive elements like buttons, sliders, and dropdowns
+
+Very basic website:
+
+- simple and straightforward design with minimal styling
+- clear and concise content
+- easy navigation with a focus on functionality
